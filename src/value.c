@@ -12,7 +12,7 @@ void initValueArray(ValueArray *array) {
 
 // Add values to the constant values pool
 void writeValueArray(ValueArray *array, Value value) {
-  if (array->capacity < array->count +1) {
+  if (array->capacity < array->count + 1) {
     int oldCapacity = array->capacity;
     array->capacity = GROW_CAPACITY(oldCapacity);
     array->values   = GROW_ARRAY(Value, array->values,
@@ -27,4 +27,8 @@ void writeValueArray(ValueArray *array, Value value) {
 void freeValueArray(ValueArray *array) {
   FREE_ARRAY(Value, array->values, array->capacity);
   initValueArray(array);
+}
+
+void printValue(Value value) {
+  printf("%g", value);
 }
