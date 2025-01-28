@@ -1,0 +1,7 @@
+CompileFlags:
+  CompilationDatabase: src/
+Index:
+  Background: Skip
+Diagnostics:
+  Suppress:
+    - -Wunused-variable
