@@ -1,5 +1,5 @@
 CompileFlags:
-  CompilationDatabase: build/
+  CompilationDatabase: .
 Index:
   Background: Skip
 Diagnostics:

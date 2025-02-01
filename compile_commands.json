@@ -1,0 +1,42 @@
+[
+{
+  "directory": "/home/user/dev/clox/build",
+  "command": "/usr/bin/cc  -I/home/user/dev/clox/include  -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-function -std=gnu99 -o CMakeFiles/clox.dir/src/chunk.c.o -c /home/user/dev/clox/src/chunk.c",
+  "file": "/home/user/dev/clox/src/chunk.c"
+},
+{
+  "directory": "/home/user/dev/clox/build",
+  "command": "/usr/bin/cc  -I/home/user/dev/clox/include  -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-function -std=gnu99 -o CMakeFiles/clox.dir/src/compiler.c.o -c /home/user/dev/clox/src/compiler.c",
+  "file": "/home/user/dev/clox/src/compiler.c"
+},
+{
+  "directory": "/home/user/dev/clox/build",
+  "command": "/usr/bin/cc  -I/home/user/dev/clox/include  -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-function -std=gnu99 -o CMakeFiles/clox.dir/src/debug.c.o -c /home/user/dev/clox/src/debug.c",
+  "file": "/home/user/dev/clox/src/debug.c"
+},
+{
+  "directory": "/home/user/dev/clox/build",
+  "command": "/usr/bin/cc  -I/home/user/dev/clox/include  -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-function -std=gnu99 -o CMakeFiles/clox.dir/src/lexer.c.o -c /home/user/dev/clox/src/lexer.c",
+  "file": "/home/user/dev/clox/src/lexer.c"
+},
+{
+  "directory": "/home/user/dev/clox/build",
+  "command": "/usr/bin/cc  -I/home/user/dev/clox/include  -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-function -std=gnu99 -o CMakeFiles/clox.dir/src/main.c.o -c /home/user/dev/clox/src/main.c",
+  "file": "/home/user/dev/clox/src/main.c"
+},
+{
+  "directory": "/home/user/dev/clox/build",
+  "command": "/usr/bin/cc  -I/home/user/dev/clox/include  -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-function -std=gnu99 -o CMakeFiles/clox.dir/src/memory.c.o -c /home/user/dev/clox/src/memory.c",
+  "file": "/home/user/dev/clox/src/memory.c"
+},
+{
+  "directory": "/home/user/dev/clox/build",
+  "command": "/usr/bin/cc  -I/home/user/dev/clox/include  -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-function -std=gnu99 -o CMakeFiles/clox.dir/src/value.c.o -c /home/user/dev/clox/src/value.c",
+  "file": "/home/user/dev/clox/src/value.c"
+},
+{
+  "directory": "/home/user/dev/clox/build",
+  "command": "/usr/bin/cc  -I/home/user/dev/clox/include  -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-function -std=gnu99 -o CMakeFiles/clox.dir/src/vm.c.o -c /home/user/dev/clox/src/vm.c",
+  "file": "/home/user/dev/clox/src/vm.c"
+}
+]

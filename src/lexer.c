@@ -20,6 +20,12 @@ void initLexer(const char* source) {
   lexer.line = 1;
 }
 
+static bool isAlpha(char c) {
+  return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_';
+}
+
+static bool isDigit(char c) { return c >= '0' && c <= '9'; }
+
 static bool isAtEnd() { return *lexer.current == '\0'; }
 
 static char advance() {
@@ -97,6 +103,67 @@ static void skipWhitespace() {
   }
 }
 
+static TokenType checkKeyword(int start, int length, const char* rest,
+                              TokenType type) {
+  if (lexer.current - lexer.start == start + length &&
+      memcmp(lexer.start + start, rest, length) == 0) {
+    return type;
+  }
+  return TOKEN_IDENTIFIER;
+}
+
+static TokenType identifierType() {
+  switch (lexer.start[0]) {
+    case 'a':
+      return checkKeyword(1, 2, "nd", TOKEN_AND);
+    case 'c':
+      return checkKeyword(1, 4, "lass", TOKEN_CLASS);
+    case 'e':
+      return checkKeyword(1, 3, "lse", TOKEN_ELSE);
+  }
+
+  return TOKEN_IDENTIFIER;
+}
+
+static Token identifier() {
+  while (isAlpha(peek()) || isDigit(peek())) {
+    advance();
+  }
+
+  return makeToken(identifierType());
+}
+
+static Token number() {
+  while (isDigit(peek())) {
+    advance();
+  }
+
+  if (peek() == '.' && isDigit(peekNext())) {
+    advance();
+
+    while (isDigit(peek())) {
+      advance();
+    }
+  }
+  return makeToken(TOKEN_NUMBER);
+}
+
+static Token string() {
+  while (peek() != '"' && !isAtEnd()) {
+    if (peek() == '\n') {
+      lexer.line++;
+      advance();
+    }
+  }
+
+  if (isAtEnd()) {
+    return errorToken("Unterminated string");
+  }
+
+  advance();
+  return makeToken(TOKEN_STRING);
+}
+
 Token scanToken() {
   skipWhitespace();
 
@@ -107,6 +174,14 @@ Token scanToken() {
   }
 
   char c = advance();
+
+  if (isAlpha(c)) {
+    return identifier();
+  }
+
+  if (isDigit(c)) {
+    return number();
+  }
 
   switch (c) {
     case '(':
@@ -131,7 +206,6 @@ Token scanToken() {
       return makeToken(TOKEN_SLASH);
     case '*':
       return makeToken(TOKEN_STAR);
-
     case '!':
       return makeToken(match('=') ? TOKEN_BANG_EQUAL : TOKEN_BANG);
     case '=':
@@ -140,6 +214,8 @@ Token scanToken() {
       return makeToken(match('=') ? TOKEN_LESS_EQUAL : TOKEN_LESS);
     case '>':
       return makeToken(match('=') ? TOKEN_GREATER_EQUAL : TOKEN_GREATER);
+    case '"':
+      return string();
   }
 
   return errorToken("Unexpected character.");
