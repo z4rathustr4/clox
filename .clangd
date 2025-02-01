@@ -1,7 +1,9 @@
 CompileFlags:
-  CompilationDatabase: src/
+  CompilationDatabase: build/
 Index:
   Background: Skip
 Diagnostics:
   Suppress:
     - -Wunused-variable
+    - -Wunused-function
+    - -Wunused-includes

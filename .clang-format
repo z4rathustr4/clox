@@ -1,0 +1,13 @@
+BasedOnStyle: Google
+ColumnLimit: 80
+IndentWidth: 2
+UseTab: Never
+BreakBeforeBraces: Attach
+PointerAlignment: Left
+AllowShortBlocksOnASingleLine: false
+AllowShortIfStatementsOnASingleLine: Always
+AllowShortLoopsOnASingleLine: false
+DerivePointerAlignment: false
+ExperimentalAutoDetectBinPacking: false
+InsertBraces: true
+SpaceBeforeParens: ControlStatements

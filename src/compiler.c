@@ -1,7 +1,8 @@
+#include "compiler.h"
+
 #include <stdio.h>
 
 #include "common.h"
-#include "compiler.h"
 #include "lexer.h"
 
 void compile(const char* source) {
@@ -17,6 +18,8 @@ void compile(const char* source) {
     }
     printf("%2d '%.*s'\n", token.type, token.length, token.start);
 
-    if (token.type == TOKEN_EOF) break;
+    if (token.type == TOKEN_EOF) {
+      break;
+    }
   }
 }

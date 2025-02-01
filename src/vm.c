@@ -1,22 +1,20 @@
 #include "vm.h"
-#include "chunk.h"
-#include "common.h"
-#include "compiler.h"
-#include "value.h"
-#include "debug.h"
+
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 
+#include "chunk.h"
+#include "common.h"
+#include "compiler.h"
+#include "debug.h"
+#include "value.h"
+
 VM vm;
 
-static void resetStack() {
-  vm.stackTop = vm.stack;
-}
+static void resetStack() { vm.stackTop = vm.stack; }
 
-void initVM() {
-  resetStack();
-}
+void initVM() { resetStack(); }
 
 void freeVM() {}
 
@@ -34,10 +32,10 @@ static InterpretResult run() {
 #define READ_BYTE() (*vm.ip++)
 #define READ_CONSTANT() (vm.chunk->constants.values[READ_BYTE()])
 #define BINARY_OP(op) \
-  do { \
-  double b = pop(); \
-  double a = pop(); \
-  push(a op b); \
+  do {                \
+    double b = pop(); \
+    double a = pop(); \
+    push(a op b);     \
   } while (false)
 
   for (;;) {
@@ -61,11 +59,21 @@ static InterpretResult run() {
         push(constant);
         break;
       }
-      case OP_ADD:    BINARY_OP(+); break;
-      case OP_SUBTRACT:    BINARY_OP(-); break;
-      case OP_MULTIPLY:   BINARY_OP(*); break;
-      case OP_DIVIDE:   BINARY_OP(/); break;
-      case OP_NEGATE: push(-pop()); break;
+      case OP_ADD:
+        BINARY_OP(+);
+        break;
+      case OP_SUBTRACT:
+        BINARY_OP(-);
+        break;
+      case OP_MULTIPLY:
+        BINARY_OP(*);
+        break;
+      case OP_DIVIDE:
+        BINARY_OP(/);
+        break;
+      case OP_NEGATE:
+        push(-pop());
+        break;
       case OP_RETURN: {
         printValue(pop());
         printf("\n");
@@ -79,6 +87,6 @@ static InterpretResult run() {
 }
 
 InterpretResult interpret(const char* source) {
-//  compile(source); // TODO: Implement basic compiler.c
+  //  compile(source); // TODO: Implement basic compiler.c
   return INTERPRET_OK;
 }
