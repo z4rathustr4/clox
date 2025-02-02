@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "chunk.h"
 #include "common.h"
@@ -87,6 +88,19 @@ static InterpretResult run() {
 }
 
 InterpretResult interpret(const char* source) {
-  //  compile(source); // TODO: Implement basic compiler.c
-  return INTERPRET_OK;
+  Chunk chunk;
+  initChunk(&chunk);
+
+  if (!compile(source, &chunk)) {
+    freeChunk(&chunk);
+    return INTERPRET_COMPILE_ERR;
+  }
+
+  vm.chunk = &chunk;
+  vm.ip = vm.chunk->code;
+
+  InterpretResult result = run();
+
+  freeChunk(&chunk);
+  return result;
 }
