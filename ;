@@ -1,7 +1,6 @@
 #include "compiler.h"
 
 #include <stdbool.h>
-#include <stdint.h>
 #include <stdio.h>
 
 #include "chunk.h"
@@ -76,21 +75,8 @@ static void emitByte(uint8_t byte) {
   writeChunk(currentChunk(), byte, parser.previous.line);
 }
 
-static void emitBytes(uint8_t byte1, uint8_t byte2) {
-  emitByte(byte1);
-  emitByte(byte2);
-}
-
-static void emitReturn() {
-  emitByte(OP_RETURN);
-}
-
 static void endCompiler() {
   emitReturn();
-}
-
-static void expression() {
-  // ???
 }
 
 bool compile(const char* source, Chunk* chunk) {
@@ -103,7 +89,6 @@ bool compile(const char* source, Chunk* chunk) {
   advance();
   // expression();
   consume(TOKEN_EOF, "Expect end of expression.");
-  endCompiler();
   return !parser.hadError;
   int line = -1;
   for (;;) {
