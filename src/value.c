@@ -1,14 +1,15 @@
 #include "value.h"
 
+#include <stdbool.h>
 #include <stdio.h>
 
 #include "memory.h"
 
 // Initialize constant values pool
 void initValueArray(ValueArray* array) {
-  array->values   = NULL;
+  array->values = NULL;
   array->capacity = 0;
-  array->count    = 0;
+  array->count = 0;
 }
 
 // Add values to the constant values pool
@@ -30,4 +31,33 @@ void freeValueArray(ValueArray* array) {
   initValueArray(array);
 }
 
-void printValue(Value value) { printf("%g", AS_NUMBER(value)); }
+bool valuesEqual(Value a, Value b) {
+  if (a.type != b.type) {
+    return false;
+  }
+
+  switch (a.type) {
+    case VAL_BOOL:
+      return AS_BOOL(a) == AS_BOOL(b);
+    case VAL_NULL:
+      return true;
+    case VAL_NUMBER:
+      return AS_NUMBER(a) == AS_NUMBER(b);
+    default:
+      return false;
+  }
+}
+
+void printValue(Value value) {
+  switch (value.type) {
+    case VAL_BOOL:
+      printf(AS_BOOL(value) ? "true" : "false");
+      break;
+    case VAL_NULL:
+      printf("null");
+      break;
+    case VAL_NUMBER:
+      printf("%g", AS_NUMBER(value));
+      break;
+  }
+}

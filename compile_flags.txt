@@ -1,2 +1,2 @@
--I/home/user/dev/clox/include -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-function -std=c17
+-I/home/user/dev/clox/include -Wall -Werror -Wno-unused-parameter -Wno-unused-function -std=c17
 

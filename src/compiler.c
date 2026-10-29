@@ -1,6 +1,5 @@
 #include "compiler.h"
 
-#include <__stdarg_va_list.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -122,25 +121,19 @@ static void emitConstant(Value value) {
   emitBytes(OP_CONST, makeConstant(value));
 }
 
-static void binary() {
-  TokenType operatorType = parser.previous.type;
-  ParseRule* rule        = getRule(operatorType);
-  parsePrecedence((Precedence)(rule->precedence + 1));
-
-  switch (operatorType) {
-    case TOKEN_PLUS:  emitByte(OP_ADD); break;
-    case TOKEN_MINUS: emitByte(OP_SUBTRACT); break;
-    case TOKEN_STAR:  emitByte(OP_MULTIPLY); break;
-    case TOKEN_SLASH: emitByte(OP_DIVIDE); break;
-  }
-}
-
 static void literal() {
   switch (parser.previous.type) {
-    case TOKEN_FALSE: emitByte(OP_FALSE); break;
-    case TOKEN_NULL:  emitByte(OP_NULL); break;
-    case TOKEN_TRUE:  emitByte(OP_TRUE); break;
-    default:          return;
+    case TOKEN_FALSE:
+      emitByte(OP_FALSE);
+      break;
+    case TOKEN_NULL:
+      emitByte(OP_NULL);
+      break;
+    case TOKEN_TRUE:
+      emitByte(OP_TRUE);
+      break;
+    default:
+      return;
   }
 }
 
@@ -150,26 +143,51 @@ static void endCompiler() {
   if (!parser.hadError) {
     disassembleChunk(currentChunk(), "code");
   }
-
 #endif /* ifdef DEBUG_PRINT_CODE */
 }
-
 static void expression();
 static ParseRule* getRule(TokenType type);
-static void parsePrecedence(Precedence precedence) {
-  advance();
-  ParseFn prefixRule = getRule(parser.previous.type)->prefix;
-  if (prefixRule == NULL) {
-    error("Expect expression.");
-    return;
-  }
+static void parsePrecedence(Precedence precedence);
 
-  prefixRule();
+static void binary() {
+  TokenType operatorType = parser.previous.type;
+  ParseRule* rule = getRule(operatorType);
+  parsePrecedence((Precedence)(rule->precedence + 1));
 
-  while (precedence <= getRule(parser.current.type)->precedence) {
-    advance();
-    ParseFn infixRule = getRule(parser.previous.type)->infix;
-    infixRule();
+  switch (operatorType) {
+    case TOKEN_BANG_EQUAL:
+      emitBytes(OP_EQU, OP_NOT);
+      break;
+    case TOKEN_EQUAL_EQUAL:
+      emitByte(OP_EQU);
+      break;
+    case TOKEN_GREATER:
+      emitByte(OP_GREATER);
+      break;
+    case TOKEN_GREATER_EQUAL:
+      emitBytes(OP_LESS, OP_NOT);
+      break;
+    case TOKEN_LESS:
+      emitByte(OP_LESS);
+      break;
+    case TOKEN_LESS_EQUAL:
+      emitBytes(OP_GREATER, OP_NOT);
+      break;
+    case TOKEN_PLUS:
+      emitByte(OP_ADD);
+      break;
+    case TOKEN_BANG:
+      emitByte(OP_NOT);
+      break;
+    case TOKEN_MINUS:
+      emitByte(OP_SUBTRACT);
+      break;
+    case TOKEN_STAR:
+      emitByte(OP_MULTIPLY);
+      break;
+    case TOKEN_SLASH:
+      emitByte(OP_DIVIDE);
+      break;
   }
 }
 
@@ -191,61 +209,72 @@ static void unary() {
 
   // emit operator instruction
   switch (operatorType) {
-    case TOKEN_MINUS: emitByte(OP_NEGATE); break;
-    default:          return;
+    case TOKEN_MINUS:
+      emitByte(OP_NEGATE);
+      break;
+    default:
+      return;
+  }
+}
+
+static void parsePrecedence(Precedence precedence) {
+  advance();
+  ParseFn prefixRule = getRule(parser.previous.type)->prefix;
+  if (prefixRule == NULL) {
+    error("Expect expression.");
+    return;
+  }
+
+  prefixRule();
+
+  while (precedence <= getRule(parser.current.type)->precedence) {
+    advance();
+    ParseFn infixRule = getRule(parser.previous.type)->infix;
+    infixRule();
   }
 }
 
 ParseRule rules[] = {
-    [TOKEN_LEFT_PAREN]    = {grouping, NULL, PREC_NONE},
-    [TOKEN_RIGHT_PAREN]   = {NULL, NULL, PREC_NONE},
-    [TOKEN_LEFT_BRACE]    = {NULL, NULL, PREC_NONE},
-    [TOKEN_RIGHT_BRACE]   = {NULL, NULL, PREC_NONE},
-    [TOKEN_COMMA]         = {NULL, NULL, PREC_NONE},
-    [TOKEN_DOT]           = {NULL, NULL, PREC_NONE},
-    [TOKEN_MINUS]         = {unary, binary, PREC_TERM},
-    [TOKEN_PLUS]          = {NULL, binary, PREC_TERM},
-    [TOKEN_SEMICOLON]     = {NULL, NULL, PREC_NONE},
-    [TOKEN_SLASH]         = {NULL, binary, PREC_FACTOR},
-    [TOKEN_STAR]          = {NULL, binary, PREC_FACTOR},
-    [TOKEN_BANG]          = {NULL, NULL, PREC_NONE},
-    [TOKEN_BANG_EQUAL]    = {NULL, NULL, PREC_NONE},
-    [TOKEN_EQUAL]         = {NULL, NULL, PREC_NONE},
-    [TOKEN_EQUAL_EQUAL]   = {NULL, NULL, PREC_NONE},
-    [TOKEN_GREATER]       = {NULL, NULL, PREC_NONE},
-    [TOKEN_GREATER_EQUAL] = {NULL, NULL, PREC_NONE},
-    [TOKEN_LESS]          = {NULL, NULL, PREC_NONE},
-    [TOKEN_LESS_EQUAL]    = {NULL, NULL, PREC_NONE},
-    [TOKEN_GREATER]       = {NULL, NULL, PREC_NONE},
-    [TOKEN_GREATER_EQUAL] = {NULL, NULL, PREC_NONE},
-    [TOKEN_LESS]          = {NULL, NULL, PREC_NONE},
-    [TOKEN_LESS_EQUAL]    = {NULL, NULL, PREC_NONE},
-    [TOKEN_IDENTIFIER]    = {NULL, NULL, PREC_NONE},
-    [TOKEN_STRING]        = {NULL, NULL, PREC_NONE},
-    [TOKEN_NUMBER]        = {number, NULL, PREC_NONE},
-    [TOKEN_AND]           = {NULL, NULL, PREC_NONE},
-    [TOKEN_CLASS]         = {NULL, NULL, PREC_NONE},
-    [TOKEN_ELSE]          = {NULL, NULL, PREC_NONE},
-    [TOKEN_FALSE]         = {literal, NULL, PREC_NONE},
-    [TOKEN_FOR]           = {NULL, NULL, PREC_NONE},
-    [TOKEN_FN]            = {NULL, NULL, PREC_NONE},
-    [TOKEN_NULL]          = {literal, NULL, PREC_NONE},
-    [TOKEN_OR]            = {NULL, NULL, PREC_NONE},
-    [TOKEN_PUTS]          = {NULL, NULL, PREC_NONE},
-    [TOKEN_RETURN]        = {NULL, NULL, PREC_NONE},
-    [TOKEN_SUPER]         = {NULL, NULL, PREC_NONE},
-    [TOKEN_THIS]          = {NULL, NULL, PREC_NONE},
-    [TOKEN_TRUE]          = {literal, NULL, PREC_NONE},
-    [TOKEN_LET]           = {NULL, NULL, PREC_NONE},
-    [TOKEN_WHILE]         = {NULL, NULL, PREC_NONE},
-    [TOKEN_ERROR]         = {NULL, NULL, PREC_NONE},
-    [TOKEN_EOF]           = {NULL, NULL, PREC_NONE},
+    [TOKEN_LEFT_PAREN] = {grouping,   NULL,   PREC_NONE},
+    [TOKEN_RIGHT_PAREN] = {    NULL,   NULL,   PREC_NONE},
+    [TOKEN_LEFT_BRACE] = {    NULL,   NULL,   PREC_NONE},
+    [TOKEN_RIGHT_BRACE] = {    NULL,   NULL,   PREC_NONE},
+    [TOKEN_COMMA] = {    NULL,   NULL,   PREC_NONE},
+    [TOKEN_DOT] = {    NULL,   NULL,   PREC_NONE},
+    [TOKEN_MINUS] = {   unary, binary,   PREC_TERM},
+    [TOKEN_PLUS] = {    NULL, binary,   PREC_TERM},
+    [TOKEN_SEMICOLON] = {    NULL,   NULL,   PREC_NONE},
+    [TOKEN_SLASH] = {    NULL, binary, PREC_FACTOR},
+    [TOKEN_STAR] = {    NULL, binary, PREC_FACTOR},
+    [TOKEN_BANG] = {   unary,   NULL,   PREC_NONE},
+    [TOKEN_BANG_EQUAL] = {    NULL, binary,     PREC_EQ},
+    [TOKEN_EQUAL] = {    NULL,   NULL,   PREC_NONE},
+    [TOKEN_EQUAL_EQUAL] = {    NULL, binary,     PREC_EQ},
+    [TOKEN_GREATER] = {    NULL, binary,   PREC_COMP},
+    [TOKEN_GREATER_EQUAL] = {    NULL, binary,   PREC_COMP},
+    [TOKEN_LESS] = {    NULL, binary,   PREC_COMP},
+    [TOKEN_LESS_EQUAL] = {    NULL, binary,   PREC_COMP},
+    [TOKEN_IDENTIFIER] = {    NULL,   NULL,   PREC_NONE},
+    [TOKEN_STRING] = {    NULL,   NULL,   PREC_NONE},
+    [TOKEN_NUMBER] = {  number,   NULL,   PREC_NONE},
+    [TOKEN_AND] = {    NULL,   NULL,   PREC_NONE},
+    [TOKEN_CLASS] = {    NULL,   NULL,   PREC_NONE},
+    [TOKEN_ELSE] = {    NULL,   NULL,   PREC_NONE},
+    [TOKEN_FALSE] = { literal,   NULL,   PREC_NONE},
+    [TOKEN_FOR] = {    NULL,   NULL,   PREC_NONE},
+    [TOKEN_FN] = {    NULL,   NULL,   PREC_NONE},
+    [TOKEN_NULL] = { literal,   NULL,   PREC_NONE},
+    [TOKEN_OR] = {    NULL,   NULL,   PREC_NONE},
+    [TOKEN_PUTS] = {    NULL,   NULL,   PREC_NONE},
+    [TOKEN_RETURN] = {    NULL,   NULL,   PREC_NONE},
+    [TOKEN_SUPER] = {    NULL,   NULL,   PREC_NONE},
+    [TOKEN_THIS] = {    NULL,   NULL,   PREC_NONE},
+    [TOKEN_TRUE] = { literal,   NULL,   PREC_NONE},
+    [TOKEN_LET] = {    NULL,   NULL,   PREC_NONE},
+    [TOKEN_WHILE] = {    NULL,   NULL,   PREC_NONE},
+    [TOKEN_ERROR] = {    NULL,   NULL,   PREC_NONE},
+    [TOKEN_EOF] = {    NULL,   NULL,   PREC_NONE},
 };
-
-static void parsePrecedence(Precedence precedence) {
-  // ???
-  return;
-}
 
 static ParseRule* getRule(TokenType type) { return &rules[type]; }
 
@@ -255,7 +284,7 @@ bool compile(const char* source, Chunk* chunk) {
   initLexer(source);
   compilingChunk = chunk;
 
-  parser.hadError  = false;
+  parser.hadError = false;
   parser.panicMode = false;
 
   advance();
