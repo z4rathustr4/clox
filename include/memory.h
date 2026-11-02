@@ -4,6 +4,10 @@
 #include "common.h"
 
 //--- MACROS ---//
+
+// Allocates an array with a given element type and count
+#define ALLOCATE(type, count) (type*)reallocate(NULL, 0, sizeof(type) * (count))
+
 // Calculate a new capacity from the currenct one, scaling based on the old
 // size by a factor of 2
 #define GROW_CAPACITY(capacity) ((capacity) < 8 ? 8 : (capacity) * 2)

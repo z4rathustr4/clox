@@ -54,13 +54,13 @@ typedef enum {
 } TokenType;
 
 typedef struct {
-  TokenType type;
+  TokenType   type;
   const char* start;
-  int length;
-  int line;
+  int         length;
+  int         line;
 } Token;
 
-void initLexer(const char* source);
+void  initLexer(const char* source);
 Token scanToken();
 
 #endif

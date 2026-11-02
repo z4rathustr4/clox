@@ -17,8 +17,8 @@
 typedef struct {
   Token current;
   Token previous;
-  bool hadError;
-  bool panicMode;
+  bool  hadError;
+  bool  panicMode;
 } Parser;
 
 typedef enum {
@@ -38,8 +38,8 @@ typedef enum {
 typedef void (*ParseFn)();
 
 typedef struct {
-  ParseFn prefix;
-  ParseFn infix;
+  ParseFn    prefix;
+  ParseFn    infix;
   Precedence precedence;
 } ParseRule;
 
@@ -145,13 +145,13 @@ static void endCompiler() {
   }
 #endif /* ifdef DEBUG_PRINT_CODE */
 }
-static void expression();
+static void       expression();
 static ParseRule* getRule(TokenType type);
-static void parsePrecedence(Precedence precedence);
+static void       parsePrecedence(Precedence precedence);
 
 static void binary() {
-  TokenType operatorType = parser.previous.type;
-  ParseRule* rule = getRule(operatorType);
+  TokenType  operatorType = parser.previous.type;
+  ParseRule* rule         = getRule(operatorType);
   parsePrecedence((Precedence)(rule->precedence + 1));
 
   switch (operatorType) {
@@ -201,6 +201,11 @@ static void number() {
   emitConstant(NUMBER_VAL(value));
 }
 
+static void string() {
+  emitConstant(OBJ_VAL(
+      copyString(parser.previous.start + 1, parser.previous.length - 2)));
+}
+
 static void unary() {
   TokenType operatorType = parser.previous.type;
 
@@ -235,45 +240,45 @@ static void parsePrecedence(Precedence precedence) {
 }
 
 ParseRule rules[] = {
-    [TOKEN_LEFT_PAREN] = {grouping,   NULL,   PREC_NONE},
-    [TOKEN_RIGHT_PAREN] = {    NULL,   NULL,   PREC_NONE},
-    [TOKEN_LEFT_BRACE] = {    NULL,   NULL,   PREC_NONE},
-    [TOKEN_RIGHT_BRACE] = {    NULL,   NULL,   PREC_NONE},
-    [TOKEN_COMMA] = {    NULL,   NULL,   PREC_NONE},
-    [TOKEN_DOT] = {    NULL,   NULL,   PREC_NONE},
-    [TOKEN_MINUS] = {   unary, binary,   PREC_TERM},
-    [TOKEN_PLUS] = {    NULL, binary,   PREC_TERM},
-    [TOKEN_SEMICOLON] = {    NULL,   NULL,   PREC_NONE},
-    [TOKEN_SLASH] = {    NULL, binary, PREC_FACTOR},
-    [TOKEN_STAR] = {    NULL, binary, PREC_FACTOR},
-    [TOKEN_BANG] = {   unary,   NULL,   PREC_NONE},
-    [TOKEN_BANG_EQUAL] = {    NULL, binary,     PREC_EQ},
-    [TOKEN_EQUAL] = {    NULL,   NULL,   PREC_NONE},
-    [TOKEN_EQUAL_EQUAL] = {    NULL, binary,     PREC_EQ},
-    [TOKEN_GREATER] = {    NULL, binary,   PREC_COMP},
+    [TOKEN_LEFT_PAREN]    = {grouping,   NULL,   PREC_NONE},
+    [TOKEN_RIGHT_PAREN]   = {    NULL,   NULL,   PREC_NONE},
+    [TOKEN_LEFT_BRACE]    = {    NULL,   NULL,   PREC_NONE},
+    [TOKEN_RIGHT_BRACE]   = {    NULL,   NULL,   PREC_NONE},
+    [TOKEN_COMMA]         = {    NULL,   NULL,   PREC_NONE},
+    [TOKEN_DOT]           = {    NULL,   NULL,   PREC_NONE},
+    [TOKEN_MINUS]         = {   unary, binary,   PREC_TERM},
+    [TOKEN_PLUS]          = {    NULL, binary,   PREC_TERM},
+    [TOKEN_SEMICOLON]     = {    NULL,   NULL,   PREC_NONE},
+    [TOKEN_SLASH]         = {    NULL, binary, PREC_FACTOR},
+    [TOKEN_STAR]          = {    NULL, binary, PREC_FACTOR},
+    [TOKEN_BANG]          = {   unary,   NULL,   PREC_NONE},
+    [TOKEN_BANG_EQUAL]    = {    NULL, binary,     PREC_EQ},
+    [TOKEN_EQUAL]         = {    NULL,   NULL,   PREC_NONE},
+    [TOKEN_EQUAL_EQUAL]   = {    NULL, binary,     PREC_EQ},
+    [TOKEN_GREATER]       = {    NULL, binary,   PREC_COMP},
     [TOKEN_GREATER_EQUAL] = {    NULL, binary,   PREC_COMP},
-    [TOKEN_LESS] = {    NULL, binary,   PREC_COMP},
-    [TOKEN_LESS_EQUAL] = {    NULL, binary,   PREC_COMP},
-    [TOKEN_IDENTIFIER] = {    NULL,   NULL,   PREC_NONE},
-    [TOKEN_STRING] = {    NULL,   NULL,   PREC_NONE},
-    [TOKEN_NUMBER] = {  number,   NULL,   PREC_NONE},
-    [TOKEN_AND] = {    NULL,   NULL,   PREC_NONE},
-    [TOKEN_CLASS] = {    NULL,   NULL,   PREC_NONE},
-    [TOKEN_ELSE] = {    NULL,   NULL,   PREC_NONE},
-    [TOKEN_FALSE] = { literal,   NULL,   PREC_NONE},
-    [TOKEN_FOR] = {    NULL,   NULL,   PREC_NONE},
-    [TOKEN_FN] = {    NULL,   NULL,   PREC_NONE},
-    [TOKEN_NULL] = { literal,   NULL,   PREC_NONE},
-    [TOKEN_OR] = {    NULL,   NULL,   PREC_NONE},
-    [TOKEN_PUTS] = {    NULL,   NULL,   PREC_NONE},
-    [TOKEN_RETURN] = {    NULL,   NULL,   PREC_NONE},
-    [TOKEN_SUPER] = {    NULL,   NULL,   PREC_NONE},
-    [TOKEN_THIS] = {    NULL,   NULL,   PREC_NONE},
-    [TOKEN_TRUE] = { literal,   NULL,   PREC_NONE},
-    [TOKEN_LET] = {    NULL,   NULL,   PREC_NONE},
-    [TOKEN_WHILE] = {    NULL,   NULL,   PREC_NONE},
-    [TOKEN_ERROR] = {    NULL,   NULL,   PREC_NONE},
-    [TOKEN_EOF] = {    NULL,   NULL,   PREC_NONE},
+    [TOKEN_LESS]          = {    NULL, binary,   PREC_COMP},
+    [TOKEN_LESS_EQUAL]    = {    NULL, binary,   PREC_COMP},
+    [TOKEN_IDENTIFIER]    = {    NULL,   NULL,   PREC_NONE},
+    [TOKEN_STRING]        = {  string,   NULL,   PREC_NONE}, // string,NULL,PREC_NONE
+    [TOKEN_NUMBER]        = {  number,   NULL,   PREC_NONE},
+    [TOKEN_AND]           = {    NULL,   NULL,   PREC_NONE},
+    [TOKEN_CLASS]         = {    NULL,   NULL,   PREC_NONE},
+    [TOKEN_ELSE]          = {    NULL,   NULL,   PREC_NONE},
+    [TOKEN_FALSE]         = { literal,   NULL,   PREC_NONE},
+    [TOKEN_FOR]           = {    NULL,   NULL,   PREC_NONE},
+    [TOKEN_FN]            = {    NULL,   NULL,   PREC_NONE},
+    [TOKEN_NULL]          = { literal,   NULL,   PREC_NONE},
+    [TOKEN_OR]            = {    NULL,   NULL,   PREC_NONE},
+    [TOKEN_PUTS]          = {    NULL,   NULL,   PREC_NONE},
+    [TOKEN_RETURN]        = {    NULL,   NULL,   PREC_NONE},
+    [TOKEN_SUPER]         = {    NULL,   NULL,   PREC_NONE},
+    [TOKEN_THIS]          = {    NULL,   NULL,   PREC_NONE},
+    [TOKEN_TRUE]          = { literal,   NULL,   PREC_NONE},
+    [TOKEN_LET]           = {    NULL,   NULL,   PREC_NONE},
+    [TOKEN_WHILE]         = {    NULL,   NULL,   PREC_NONE},
+    [TOKEN_ERROR]         = {    NULL,   NULL,   PREC_NONE},
+    [TOKEN_EOF]           = {    NULL,   NULL,   PREC_NONE},
 };
 
 static ParseRule* getRule(TokenType type) { return &rules[type]; }
@@ -284,11 +289,11 @@ bool compile(const char* source, Chunk* chunk) {
   initLexer(source);
   compilingChunk = chunk;
 
-  parser.hadError = false;
+  parser.hadError  = false;
   parser.panicMode = false;
 
   advance();
-  // expression();
+  expression();
   consume(TOKEN_EOF, "Expect end of expression.");
   endCompiler();
   return !parser.hadError;

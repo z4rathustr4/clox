@@ -9,11 +9,11 @@ SRCS := $(wildcard $(SRC_DIR)/*.c)
 OBJS := $(SRCS:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
 DEPS := $(OBJS:.o=.d)
 
-# Progress tracking: one step per object file, plus one for the final link
+# progress tracking
 TOTAL := $(words $(OBJS))
 STEPS := $(shell expr $(TOTAL) + 1)
 
-# Give each object an index (IDX_obj/foo.o := 1, IDX_obj/bar.o := 2, ...)
+# idx_obj/foo.o := 1, idx_obj/bar.o := 2, ...
 $(foreach i,$(shell seq 1 $(TOTAL)),$(eval IDX_$(word $(i),$(OBJS)) := $(i)))
 
 .DEFAULT_GOAL := all

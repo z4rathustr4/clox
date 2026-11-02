@@ -6,13 +6,9 @@
 
 
 Note: if for some godforsaken reason you prefer using CMake (yes, I thought it
-would be a good idea myself), you can generate `compile_commands.json` using
+would be a good idea myself), you can build the project with that bullshit
+with this command:
 
 ```console
-cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=1
-```
-
-and then build it:
-```console
-mkdir build && cd build && cmake ..
+cmake -S . -B build && cmake --build build
 ```

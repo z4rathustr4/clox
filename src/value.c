@@ -2,14 +2,16 @@
 
 #include <stdbool.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "memory.h"
+#include "object.h"
 
 // Initialize constant values pool
 void initValueArray(ValueArray* array) {
-  array->values = NULL;
+  array->values   = NULL;
   array->capacity = 0;
-  array->count = 0;
+  array->count    = 0;
 }
 
 // Add values to the constant values pool
@@ -43,8 +45,14 @@ bool valuesEqual(Value a, Value b) {
       return true;
     case VAL_NUMBER:
       return AS_NUMBER(a) == AS_NUMBER(b);
+    case VAL_OBJ: {
+      ObjString* aString = AS_STRING(a);
+      ObjString* bString = AS_STRING(b);
+      return aString->length == bString->length &&
+             memcmp(aString->chars, bString->chars, aString->length) == 0;
+    }
     default:
-      return false;
+      return false;  // unreachable
   }
 }
 
@@ -58,6 +66,9 @@ void printValue(Value value) {
       break;
     case VAL_NUMBER:
       printf("%g", AS_NUMBER(value));
+      break;
+    case VAL_OBJ:
+      printObject(value);
       break;
   }
 }

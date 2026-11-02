@@ -15,4 +15,13 @@ DerivePointerAlignment: false
 ExperimentalAutoDetectBinPacking: false
 InsertBraces: true
 SpaceBeforeParens: ControlStatements
+AlignConsecutiveAssignments: true
 AlignConsecutiveMacros: true
+AlignConsecutiveDeclarations:
+  Enabled: true
+  AcrossEmptyLines: false
+  AcrossComments: false
+  AlignCompound: false
+  AlignFunctionDeclarations: true
+  AlignFunctionPointers: false
+  PadOperators: false
