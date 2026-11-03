@@ -2,15 +2,18 @@
 #define clox_vm_h
 
 #include "chunk.h"
+#include "hash.h"
 #include "value.h"
 
 #define STACK_MAX 256
 
 typedef struct {
-  Chunk*   chunk;
-  uint8_t* ip;
-  Value    stack[STACK_MAX];
-  Value*   stackTop;
+  Chunk*    chunk;
+  uint8_t*  ip;
+  Value     stack[STACK_MAX];
+  Value*    stackTop;
+  HashTable strings;
+  Obj*      objects;
 } VM;
 
 typedef enum {
@@ -18,6 +21,8 @@ typedef enum {
   INTERPRET_COMPILE_ERR,
   INTERPRET_RUNTIME_ERR,
 } InterpretResult;
+
+extern VM vm;
 
 void            initVM();
 void            freeVM();
