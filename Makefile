@@ -1,5 +1,6 @@
 CC      := cc
-CFLAGS  := -std=c17 -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-function -Iinclude
+CFLAGS  := -std=c99 -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-function -Iinclude
+TFLAGS  := -std=c99 -Wno-unused-parameter -Wno-unused-function -Iinclude
 TARGET  := clox
 
 SRC_DIR := src
@@ -28,6 +29,9 @@ build: $(TARGET)
 	@for o in $(OBJS); do echo "[build]   - $$o"; done
 	@echo "[build] Progress: $(STEPS)/$(STEPS) steps (100%)"
 
+test:
+	@$(MAKE) build CFLAGS="$(TFLAGS)"
+
 $(TARGET): $(OBJS)
 	@echo "[100%] Linking $(TARGET) ($(STEPS)/$(STEPS))"
 	@echo "       Objects: $(OBJS)"
@@ -51,6 +55,7 @@ help:
 	@echo "Targets:"
 	@echo "  all      Default target. Runs 'build' and prints a summary of what was linked"
 	@echo "  build    Compiles every src/*.c into obj/*.o and links them into '$(TARGET)'"
+	@echo "  test     Builds using TFLAGS instead of CFLAGS"
 	@echo "  clean    Removes the '$(OBJ_DIR)/' directory and the '$(TARGET)' binary"
 	@echo "  help     Shows this message"
 	@echo ""
@@ -61,4 +66,4 @@ help:
 
 -include $(DEPS)
 
-.PHONY: all build clean help
+.PHONY: all build test clean help

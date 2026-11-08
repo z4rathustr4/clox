@@ -27,6 +27,20 @@ static int simpleInstruction(const char* name, int offset) {
   return offset + 1;
 }
 
+static int byteInstruction(const char* name, Chunk* chunk, int offset) {
+  uint8_t slot = chunk->code[offset + 1];
+  printf("%-16s %4d\n", name, slot);
+  return offset + 2;
+}
+
+static int jmpInstruction(const char* name, int sign, Chunk* chunk,
+                          int offset) {
+  uint16_t jmp = (uint16_t)(chunk->code[offset + 1] << 8);
+  jmp |= chunk->code[offset + 2];
+  printf("%-16s %4d -> %d\n", name, offset, offset + 3 + sign * jmp);
+  return offset + 3;
+}
+
 int disassembleInstruction(Chunk* chunk, int offset) {
   printf("%04d ", offset);
   if (offset > 0 && chunk->lines[offset] == chunk->lines[offset - 1]) {
@@ -48,6 +62,10 @@ int disassembleInstruction(Chunk* chunk, int offset) {
       return simpleInstruction("OP_FALSE", offset);
     case OP_POP:
       return simpleInstruction("OP_POP", offset);
+    case OP_GET_LOCAL:
+      return byteInstruction("OP_GET_LOCAL", chunk, offset);
+    case OP_SET_LOCAL:
+      return byteInstruction("OP_SET_LOCAL", chunk, offset);
     case OP_GET_GLOBAL:
       return constantInstruction("OP_GET_GLOBAL", chunk, offset);
     case OP_DEFINE_GLOBAL:
@@ -74,6 +92,10 @@ int disassembleInstruction(Chunk* chunk, int offset) {
       return simpleInstruction("OP_NEGATE", offset);
     case OP_PUTS:
       return simpleInstruction("OP_PUTS", offset);
+    case OP_JMP:
+      return jmpInstruction("OP_JMP", 1, chunk, offset);
+    case OP_LOOP:
+      return jmpInstruction("OP_LOOP", -1, chunk, offset);
     case OP_RETURN:
       return simpleInstruction("OP_RETURN", offset);
     default:

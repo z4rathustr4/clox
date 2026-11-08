@@ -5,6 +5,7 @@ Index:
   Background: Skip
 Diagnostics:
   Suppress:
+    - -Wunused-parameter
     - -Wunused-variable
     - -Wunused-function
     - -Wunused-includes
