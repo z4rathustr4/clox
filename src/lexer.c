@@ -6,6 +6,23 @@
 
 #include "common.h"
 
+static char      advance();
+static TokenType checkKeyword(int start, int length, const char* rest,
+                              TokenType type);
+static Token     errorToken(const char* message);
+static Token     identifier();
+static TokenType identifierType();
+static bool      isAlpha(char c);
+static bool      isAtEnd();
+static bool      isDigit(char c);
+static Token     makeToken(TokenType type);
+static bool      match(char expected);
+static Token     number();
+static char      peek();
+static char      peekNext();
+static void      skipWhitespace();
+static Token     string();
+
 typedef struct {
   const char* start;
   const char* current;
@@ -84,7 +101,7 @@ static void skipWhitespace() {
         advance();
         break;
       case '\n':
-        lexer.line++;
+        lexer.line;
         advance();
         break;
       case '/':
@@ -188,10 +205,8 @@ static Token number() {
 
 static Token string() {
   while (peek() != '"' && !isAtEnd()) {
-    if (peek() == '\n') {
-      lexer.line++;
-      advance();
-    }
+    if (peek() == '\n') lexer.line++;
+    advance();
   }
 
   if (isAtEnd()) {

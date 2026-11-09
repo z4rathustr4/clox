@@ -13,20 +13,21 @@
 #define STACK_MAX  (FRAMES_MAX * UINT8_COUNT)
 
 typedef struct {
-  ObjFunction* function;
-  uint8_t*     ip;
-  Value*       slots;
+  ObjClosure* closure;
+  uint8_t*    ip;
+  Value*      slots;
 } CallFrame;
 
 typedef struct {
   CallFrame frames[FRAMES_MAX];
   int       frameCount;
 
-  Value     stack[STACK_MAX];
-  Value*    stackTop;
-  HashTable globals;
-  HashTable strings;
-  Obj*      objects;
+  Value       stack[STACK_MAX];
+  Value*      stackTop;
+  HashTable   globals;
+  HashTable   strings;
+  ObjUpvalue* openUpvalues;
+  Obj*        objects;
 } VM;
 
 typedef enum {

@@ -1,6 +1,9 @@
 CompileFlags:
   CompilationDatabase: .
-  Add: [-I/usr/lib/gcc/x86_64-pc-linux-gnu/16/]
+  Add:
+    - -std=c99
+    - -I/usr/lib/gcc/x86_64-pc-linux-gnu/16/
+    - -Wno-c23-extensions
 Index:
   Background: Skip
 Diagnostics:

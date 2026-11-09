@@ -1,0 +1,19 @@
+let globalOne;
+let globalTwo;
+
+fn main() {
+  for (let a = 1; a <= 2; a = a + 1) {
+    fn closure() {
+      puts a;
+    }
+    if (globalOne == null) {
+      globalOne = closure;
+    } else {
+      globalTwo = closure;
+    }
+  }
+}
+
+main();
+globalOne();
+globalTwo();
