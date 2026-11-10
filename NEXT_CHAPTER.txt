@@ -1,0 +1,5 @@
+Today i didn't feel well, so I'm leaving the rest of the Garbage Collection chapter until tomorrow.
+Stopped in: Less obvious roots, 26.3.1
+
+Link:
+https://craftinginterpreters.com/garbage-collection.html#less-obvious-roots
