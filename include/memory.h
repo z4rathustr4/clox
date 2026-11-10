@@ -3,6 +3,7 @@
 
 #include "common.h"
 #include "object.h"
+#include "value.h"
 
 //--- MACROS ---//
 
@@ -27,7 +28,9 @@
 #define FREE(type, pointer) reallocate(pointer, sizeof(type), 0)
 
 void* reallocate(void* pointer, size_t oldSize, size_t newSize);
-
-void freeObjects();
+void  markObject(Obj* object);
+void  markValue(Value value);
+void  collectGarbage();
+void  freeObjects();
 
 #endif

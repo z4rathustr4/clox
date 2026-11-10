@@ -1,14 +1,12 @@
 CompileFlags:
-  CompilationDatabase: .
   Add:
-    - -std=c99
-    - -I/usr/lib/gcc/x86_64-pc-linux-gnu/16/
+    - -I/usr/lib/gcc/x86_64-pc-linux-gnu/16/include
     - -Wno-c23-extensions
 Index:
   Background: Skip
 Diagnostics:
   Suppress:
-    - -Wunused-parameter
-    - -Wunused-variable
-    - -Wunused-function
-    - -Wunused-includes
+    - unused-parameter
+    - unused-variable
+    - unused-function
+    - unused-includes

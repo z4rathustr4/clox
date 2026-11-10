@@ -28,4 +28,6 @@ void tableAddAll(HashTable* from, HashTable* to);
 ObjString* tableFindString(HashTable* table, const char* chars, int length,
                            uint32_t hash);
 
+void markTable(HashTable* table);
+
 #endif  // !CLOX_HASH_H
