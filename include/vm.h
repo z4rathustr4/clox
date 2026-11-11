@@ -28,6 +28,9 @@ typedef struct {
   HashTable   strings;
   ObjUpvalue* openUpvalues;
   Obj*        objects;
+  int         grayCount;
+  int         grayCapacity;
+  Obj**       grayStack;
 } VM;
 
 typedef enum {
@@ -38,10 +41,10 @@ typedef enum {
 
 extern VM vm;
 
-void            initVM();
-void            freeVM();
+void initVM();
+void freeVM();
+void push(Value value);
+Value pop();
 InterpretResult interpret(const char* source);
-void            push(Value value);
-Value           pop();
 
 #endif

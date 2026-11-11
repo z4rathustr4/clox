@@ -1,3 +1,6 @@
+/* @file debug.c */
+/* TODO: Add doxygen-style comments and fix this mess */
+
 #include "debug.h"
 
 #include <stdint.h>
@@ -113,7 +116,7 @@ int disassembleInstruction(Chunk* chunk, int offset) {
       ObjFunction* function = AS_FUNCTION(chunk->constants.values[constant]);
       for (int j = 0; j < function->upvalueCount; j++) {
         int isLocal = chunk->code[offset++];
-        int idx     = chunk->code[offset++];
+        int idx = chunk->code[offset++];
         printf("%04d      |                     %s %d\n", offset - 2,
                isLocal ? "local" : "upvalue", idx);
       }
