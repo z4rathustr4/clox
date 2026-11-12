@@ -98,26 +98,25 @@ ObjNative* newNative(NativeFn function) {
 }
 
 /**
- * @brief Creates an ObjString and registers it in the intern table.
+ * @brief Creates an ObjString and interns it in `vm.strings`.
  *
- * The string is inserted as a KEY of `vm.strings` with a null value (the
- * table is used as a set).
+ * The string is pushed on the stack around tableSet() so a GC triggered by
+ * a table resize cannot free it.
  *
- * @param chars  Heap buffer; ownership transfers to the new string.
+ * @param chars  Heap buffer; ownership transfers to the string.
  * @param length Length excluding the NUL terminator.
  * @param hash   Precomputed hash of the contents.
- *
- * @warning tableSet() may allocate (growing the table), which can trigger a
- *          GC. The new string is not yet reachable from any root at that
- *          moment, so once the collector actually frees objects it must be
- *          pushed onto the VM stack around the call.
  */
 static ObjString* allocateString(char* chars, int length, uint32_t hash) {
   ObjString* string = ALLOCATE_OBJ(ObjString, OBJ_STRING);
   string->length = length;
   string->chars = chars;
   string->hash = hash;
+
+  push(OBJ_VAL(string));
   tableSet(&vm.strings, string, NULL_VAL);
+  pop();
+
   return string;
 }
 

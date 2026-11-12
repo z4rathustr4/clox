@@ -584,17 +584,8 @@ static int resolveUpvalue(Compiler* compiler, Token* name) {
 }
 
 /**
- * @brief Registers an upvalue in @p compiler, de-duplicating repeats.
- *
- * @param compiler Function that needs the upvalue.
- * @param idx      Local slot or enclosing-upvalue index (see Upvalue).
- * @param isLocal  Whether @p idx refers to a local of the enclosing function.
+ * @brief Registers an upvalue in @p compiler, reusing an identical one.
  * @return Index of the (existing or new) upvalue.
- *
- * @bug The "Too many closure variables" check sits INSIDE the for loop, so it
- *      never fires when the list is empty and is evaluated redundantly per
- *      iteration. It belongs after the loop, before the new entry is written;
- *      as written, a 257th upvalue writes past `upvalues[]`.
  */
 static int addUpvalue(Compiler* compiler, uint8_t idx, bool isLocal) {
   int upvalueCount = compiler->function->upvalueCount;
@@ -604,10 +595,11 @@ static int addUpvalue(Compiler* compiler, uint8_t idx, bool isLocal) {
     if (upvalue->idx == idx && upvalue->isLocal == isLocal) {
       return i;
     }
+  }
 
-    if (upvalueCount == UINT8_COUNT) {
-      error("Too many closure variables in function.");
-    }
+  if (upvalueCount == UINT8_COUNT) {
+    error("Too many closure variables in function.");
+    return -1;
   }
 
   compiler->upvalues[upvalueCount].isLocal = isLocal;
@@ -1246,15 +1238,8 @@ static void statement() {
  * ====================================================================== */
 
 /**
- * @brief Compiles a source string into a top-level function.
- *
- * @param source NUL-terminated Lox source text.
- * @return The script as an ObjFunction (to be wrapped in a closure and run
- *         by the VM), or NULL if any compile error occurred.
- *
- * @bug Everything after `return ...;` (the token-dumping loop) is
- *      unreachable debug code left over from an earlier stage and can be
- *      deleted.
+ * @brief Compiles @p source into a top-level function.
+ * @return The script function, or NULL if any compile error occurred.
  */
 ObjFunction* compile(const char* source) {
   initLexer(source);
@@ -1273,21 +1258,22 @@ ObjFunction* compile(const char* source) {
   ObjFunction* function = endCompiler();
   return parser.hadError ? NULL : function;
 
-  int line = -1;
-  for (;;) {
-    Token token = scanToken();
-    if (token.line != line) {
-      printf("%4d ", token.line);
-      line = token.line;
-    } else {
-      printf("    | ");
-    }
-    printf("%2d '%.*s'\n", token.type, token.length, token.start);
-
-    if (token.type == TOKEN_EOF) {
-      break;
-    }
-  }
+  // Debug code the clanker noticed but not me.
+  // int line = -1;
+  // for (;;) {
+  //   Token token = scanToken();
+  //   if (token.line != line) {
+  //     printf("%4d ", token.line);
+  //     line = token.line;
+  //   } else {
+  //     printf("    | ");
+  //   }
+  //   printf("%2d '%.*s'\n", token.type, token.length, token.start);
+  //
+  //   if (token.type == TOKEN_EOF) {
+  //     break;
+  //   }
+  // }
 }
 
 /**

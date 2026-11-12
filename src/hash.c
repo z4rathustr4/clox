@@ -98,16 +98,8 @@ bool tableGet(HashTable* table, ObjString* key, Value* value) {
 }
 
 /**
- * @brief Resizes the table to @p capacity and rehashes every live entry.
- *
- * Allocates a fresh array, then reinserts each live entry (tombstones are
- * dropped, so `count` is recomputed to count only live entries).
- *
- * @bug The skip condition is inverted: `if (entry->key) continue;` skips
- *      LIVE entries and tries to move EMPTY ones, passing a NULL key into
- *      findEntry() (which dereferences it). It should be
- *      `if (entry->key == NULL) continue;`. This crashes on the second
- *      resize, once the table actually contains entries.
+ * @brief Resizes the table to @p capacity and rehashes live entries.
+ *        Tombstones are dropped.
  */
 static void adjustCapacity(HashTable* table, int capacity) {
   Entry* entries = ALLOCATE(Entry, capacity);
@@ -119,7 +111,8 @@ static void adjustCapacity(HashTable* table, int capacity) {
   table->count = 0;
   for (int i = 0; i < table->capacity; i++) {
     Entry* entry = &table->entries[i];
-    if (entry->key) continue;
+    if (entry->key == NULL)
+      continue;  // no one but the clanker will notice hehe :)
 
     Entry* dest = findEntry(entries, capacity, entry->key);
     dest->key = entry->key;
@@ -212,6 +205,22 @@ ObjString* tableFindString(HashTable* table, const char* chars, int length,
     }
 
     index = (index + 1) % table->capacity;
+  }
+}
+
+/**
+ * @brief Deletes entries whose key string is unmarked.
+ *
+ * @pre Tracing is done. Must run before sweep(), or the table keeps
+ *      dangling keys.
+ * @param table The string-intern table (`vm.strings`).
+ */
+void tableRemoveWhite(HashTable* table) {
+  for (int i = 0; i < table->capacity; i++) {
+    Entry* entry = &table->entries[i];
+    if (entry->key != NULL && !entry->key->obj.isMarked) {
+      tableDelete(table, entry->key);
+    }
   }
 }
 

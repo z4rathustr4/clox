@@ -17,6 +17,7 @@
 
 #include "memory.h"
 #include "value.h"
+#include "vm.h"
 
 /** @brief Initializes @p chunk as empty (no allocation yet). */
 void initChunk(Chunk* chunk) {
@@ -69,6 +70,8 @@ void writeChunk(Chunk* chunk, uint8_t byte, int line) {
  *         check it fits in 0..255).
  */
 int addConstant(Chunk* chunk, Value value) {
+  push(value);
   writeValueArray(&chunk->constants, value);
+  pop();
   return chunk->constants.count - 1;
 }

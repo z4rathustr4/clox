@@ -1,3 +1,4 @@
+/* @file vm.h */
 #ifndef clox_vm_h
 #define clox_vm_h
 
@@ -14,23 +15,26 @@
 
 typedef struct {
   ObjClosure* closure;
-  uint8_t*    ip;
-  Value*      slots;
+  uint8_t* ip;
+  Value* slots;
 } CallFrame;
 
 typedef struct {
   CallFrame frames[FRAMES_MAX];
-  int       frameCount;
+  int frameCount;
 
-  Value       stack[STACK_MAX];
-  Value*      stackTop;
-  HashTable   globals;
-  HashTable   strings;
+  Value stack[STACK_MAX];
+  Value* stackTop;
+  HashTable globals;
+  HashTable strings;
   ObjUpvalue* openUpvalues;
-  Obj*        objects;
-  int         grayCount;
-  int         grayCapacity;
-  Obj**       grayStack;
+
+  size_t bytesAllocated;
+  size_t nextGC;
+  Obj* objects;
+  int grayCount;
+  int grayCapacity;
+  Obj** grayStack;
 } VM;
 
 typedef enum {

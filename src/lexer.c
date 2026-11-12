@@ -150,7 +150,7 @@ static void skipWhitespace() {
         advance();
         break;
       case '\n':
-        lexer.line;
+        lexer.line++;
         advance();
         break;
       case '/':

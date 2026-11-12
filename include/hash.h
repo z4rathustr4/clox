@@ -1,3 +1,4 @@
+/* @file hash.h */
 #ifndef CLOX_HASH_H
 #define CLOX_HASH_H
 
@@ -8,12 +9,12 @@
 
 typedef struct {
   ObjString* key;
-  Value      value;
+  Value value;
 } Entry;
 
 typedef struct {
-  int    count;
-  int    capacity;
+  int count;
+  int capacity;
   Entry* entries;
 } HashTable;
 
@@ -27,6 +28,7 @@ void tableAddAll(HashTable* from, HashTable* to);
 
 ObjString* tableFindString(HashTable* table, const char* chars, int length,
                            uint32_t hash);
+void tableRemoveWhite(HashTable* table);
 
 void markTable(HashTable* table);
 

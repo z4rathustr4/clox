@@ -126,12 +126,14 @@ static void defineNative(const char* name, NativeFn function) {
  * ====================================================================== */
 
 /**
- * @brief Initializes the VM: empty stack, no objects, empty GC worklist and
- *        tables, and the built-in natives.
+ * @brief Initializes the VM: stack, GC state (first collection at 1 MiB),
+ *        tables and built-in natives.
  */
 void initVM() {
   resetStack();
   vm.objects = NULL;
+  vm.bytesAllocated = 0;
+  vm.nextGC = 1024 * 1024;
 
   // The gray worklist starts empty; it is grown lazily by markObject() and
   // released in memory.c:freeObjects().
@@ -227,19 +229,10 @@ static bool call(ObjClosure* closure, int argCount) {
 /**
  * @brief Call dispatcher: invokes @p callee according to its object type.
  *
- * The callee sits on the stack just below its @p argCount arguments.
- * Closures get a new frame (the interpreter loop then runs it). Natives run
- * immediately here: the arguments and callee are popped and replaced by the
- * native's return value.
- *
  * @param callee   Value being called.
  * @param argCount Number of arguments on the stack above it.
  * @return true if the call was set up or completed; false on error (already
  *         reported), which makes run() abort.
- *
- * @warning A declaration directly after a `case` label is only valid in C23
- *          (or as a compiler extension). Wrap the OBJ_NATIVE case body in
- *          `{ }` for portability.
  */
 static bool callValue(Value callee, int argCount) {
   // Only heap objects can be callable.
@@ -247,13 +240,14 @@ static bool callValue(Value callee, int argCount) {
     switch (OBJ_TYPE(callee)) {
       case OBJ_CLOSURE:
         return call(AS_CLOSURE(callee), argCount);
-      case OBJ_NATIVE:
+      case OBJ_NATIVE: {
         NativeFn native = AS_NATIVE(callee);  // extract the function pointer
         Value result =
             native(argCount, vm.stackTop - argCount);  // args start here
         vm.stackTop -= argCount + 1;  // discard args AND the callee slot
         push(result);                 // replace them with the result
         return true;
+      }
       default:
         break;  // non-callable object type (e.g. a string)
     }
@@ -318,12 +312,6 @@ static ObjUpvalue* captureUpvalue(Value* local) {
 /**
  * @brief Closes every open upvalue pointing at stack slot @p last or above.
  *
- * "Closing" hoists the variable off the stack: its value is copied into the
- * upvalue's own `closed` field and `location` is repointed at that field, so
- * closures keep working after the stack slot is gone. Because the list is
- * sorted descending, it pops from the head and stops at the first upvalue
- * below @p last.
- *
  * @param last Lowest stack slot that is going away.
  */
 static void closeUpvalues(Value* last) {
@@ -340,34 +328,31 @@ static void closeUpvalues(Value* last) {
  * Interpreter helpers
  * ====================================================================== */
 
-/** @brief Lox truthiness: only `null` and `false` are falsey (0 and "" are
- *         truthy). */
+/* @brief Only `null` and `false` are falsey (0 and "" are truthy). */
 static bool isFalsey(Value value) {
   return IS_NULL(value) || (IS_BOOL(value) && !AS_BOOL(value));
 }
 
 /**
- * @brief Pops two strings (b on top, a below) and pushes a + b.
+ * @brief Concatenates the top two strings; stack effect [a, b] -> [a + b].
  *
- * Builds the result in a fresh buffer and hands it to takeString(), which
- * interns it (freeing the buffer if an identical string already exists).
- *
- * @warning Both operands are popped BEFORE ALLOCATE, so they are unreachable
- *          if that allocation triggers a collection. Harmless while the GC
- *          frees nothing, but once sweep exists, peek() them and pop only
- *          after the result is built.
+ * Operands stay on the stack until the result exists, so they remain
+ * GC-reachable during allocation.
  */
 static void concatenate() {
-  ObjString* b = AS_STRING(pop());
-  ObjString* a = AS_STRING(pop());
+  ObjString* b = AS_STRING(peek(0));
+  ObjString* a = AS_STRING(peek(1));
 
   int length = a->length + b->length;
   char* chars = ALLOCATE(char, length + 1);
+
   memcpy(chars, a->chars, a->length);
   memcpy(chars + a->length, b->chars, b->length);
   chars[length] = '\0';
 
   ObjString* result = takeString(chars, length);
+  pop();
+  pop();
   push(OBJ_VAL(result));
 }
 
@@ -384,18 +369,6 @@ static void concatenate() {
  * OP_RETURN).
  *
  * @return INTERPRET_OK on normal completion, INTERPRET_RUNTIME_ERR on error.
- *
- * @bug The compiler emits OP_LOOP for `while` and `for` (backward jumps), but
- *      no `case OP_LOOP` exists below, so loops cannot execute correctly: the
- *      operand bytes would be decoded as opcodes. Add:
- *      @code
- *      case OP_LOOP: {
- *        uint16_t offset = READ_SHORT();
- *        frame->ip -= offset;
- *        break;
- *      }
- *      @endcode
- * @bug OP_CONST prints every constant as it loads it (leftover debug output).
  */
 static InterpretResult run() {
   CallFrame* frame = &vm.frames[vm.frameCount - 1];
@@ -454,8 +427,9 @@ static InterpretResult run() {
       // Push a constant from the constant table.
       case OP_CONST: {
         Value constant = READ_CONSTANT();
-        printValue(constant);
-        printf("\n");
+        // DEBUG_TRACE_EXECUTION
+        // printValue(constant);
+        // printf("\n");
         push(constant);
         break;
       }
@@ -621,6 +595,12 @@ static InterpretResult run() {
       case OP_JMP_IF_FALSE: {
         uint16_t offset = READ_SHORT();
         if (isFalsey(peek(0))) frame->ip += offset;
+        break;
+      }
+      // Welp clanker noticed an unhandled case, i guess i must fix it
+      case OP_LOOP: {
+        uint16_t offset = READ_SHORT();
+        frame->ip -= offset;
         break;
       }
 

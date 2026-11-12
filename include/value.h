@@ -1,3 +1,4 @@
+/* @file value.h */
 #ifndef clox_value_h
 #define clox_value_h
 
@@ -21,9 +22,9 @@ typedef enum {
 typedef struct {
   ValueType type;
   union {
-    bool   boolean;
+    bool boolean;
     double number;
-    Obj*   obj;
+    Obj* obj;
   } as;
 } Value;
 
@@ -43,8 +44,8 @@ typedef struct {
 
 // constant pool for literal values
 typedef struct {
-  int    capacity;
-  int    count;
+  int capacity;
+  int count;
   Value* values;
 } ValueArray;
 

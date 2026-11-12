@@ -1,3 +1,4 @@
+/* @file object.h */
 #ifndef CLOX_OBJECT_H
 #define CLOX_OBJECT_H
 
@@ -32,45 +33,45 @@ typedef enum {
 } ObjType;
 
 struct Obj {
-  ObjType     type;
-  bool        isMarked;
+  ObjType type;
+  bool isMarked;
   struct Obj* next;
 };
 
 typedef struct {
-  Obj        obj;
-  int        arity;
-  int        upvalueCount;
-  Chunk      chunk;
+  Obj obj;
+  int arity;
+  int upvalueCount;
+  Chunk chunk;
   ObjString* name;
 } ObjFunction;
 
 typedef Value (*NativeFn)(int argCount, Value* args);
 
 typedef struct {
-  Obj      obj;
+  Obj obj;
   NativeFn function;
 } ObjNative;
 
 struct ObjString {
-  Obj      obj;
-  int      length;
-  char*    chars;
+  Obj obj;
+  int length;
+  char* chars;
   uint32_t hash;
 };
 
 typedef struct ObjUpvalue {
-  Obj                obj;
-  Value*             location;
-  Value              closed;
+  Obj obj;
+  Value* location;
+  Value closed;
   struct ObjUpvalue* next;
 } ObjUpvalue;
 
 typedef struct {
-  Obj          obj;
+  Obj obj;
   ObjFunction* function;
   ObjUpvalue** upvalues;
-  int          upvalueCount;
+  int upvalueCount;
 } ObjClosure;
 
 ObjClosure* newClosure(ObjFunction* function);

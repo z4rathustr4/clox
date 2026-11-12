@@ -31,6 +31,8 @@
 #include "debug.h"
 #endif /* ifdef DEBUG_LOG_GC */
 
+#define GC_HEAP_GROW_FACTOR 2
+
 /**
  * @brief Single entry point for all heap allocation, growth, shrinkage and
  *        freeing.
@@ -48,12 +50,19 @@
  * @param newSize Requested size in bytes (0 to free).
  * @return The (possibly moved) block, or NULL after a free. Exits the
  *         process if the system is out of memory.
+ *
+ *  TODO: Update doc
  */
 void* reallocate(void* pointer, size_t oldSize, size_t newSize) {
+  vm.bytesAllocated += newSize - oldSize;
   if (newSize > oldSize) {
 #ifdef DEBUG_STRESS_GC
     collectGarbage();
 #endif /* ifdef DEBUG_STRESS_GC */
+
+    if (vm.bytesAllocated > vm.nextGC) {
+      collectGarbage();
+    }
   }
 
   if (newSize == 0) {
@@ -69,20 +78,15 @@ void* reallocate(void* pointer, size_t oldSize, size_t newSize) {
 }
 
 /**
- * @brief Marks @p object reachable and queues it for tracing (turns it gray).
+ * @brief Marks an object reachable and queues it on the gray worklist.
  *
- * Appends the object to the gray worklist, growing it with plain realloc()
- * rather than reallocate(): allocating through reallocate() could re-enter
- * the collector in the middle of a collection.
+ * Already-marked objects are skipped, so cycles terminate.
  *
  * @param object Object to mark; NULL is ignored.
- *
- * @bug There is no early return for already-marked objects. Once tracing is
- *      implemented, a reference cycle will push the same object forever.
- *      Add `if (object->isMarked) return;` before marking.
  */
 void markObject(Obj* object) {
   if (object == NULL) return;
+  if (object->isMarked) return;
 
 #ifdef DEBUG_LOG_GC
   printf("%p mark ", (void*)object);
@@ -107,6 +111,41 @@ void markObject(Obj* object) {
  *         booleans and null need no marking. */
 void markValue(Value value) {
   if (IS_OBJ(value)) markObject(AS_OBJ(value));
+}
+
+static void markArray(ValueArray* array) {
+  for (int i = 0; i < array->count; i++) {
+    markValue(array->values[i]);
+  }
+}
+
+static void blackenObject(Obj* object) {
+#ifdef DEBUG_LOG_GC
+  printf("%p blacken", (void*)object);
+  printValue(OBJ_VAL(object));
+  printf("\n");
+#endif /* ifdef DEBUG_LOG_GC */
+  switch (object->type) {
+    case OBJ_CLOSURE: {
+      ObjClosure* closure = (ObjClosure*)object;
+      markObject((Obj*)closure->function);
+      for (int i = 0; i < closure->upvalueCount; i++) {
+        markObject((Obj*)closure->upvalues[i]);
+      }
+      break;
+    }
+    case OBJ_FUNCTION: {
+      ObjFunction* function = (ObjFunction*)object;
+      markObject((Obj*)function->name);
+      markArray(&function->chunk.constants);
+    }
+    case OBJ_UPVALUE:
+      markValue(((ObjUpvalue*)object)->closed);
+      break;
+    case OBJ_NATIVE:
+    case OBJ_STRING:
+      break;
+  }
 }
 
 /**
@@ -178,29 +217,69 @@ static void markRoots() {
 }
 
 /**
- * @brief Runs a garbage collection.
+ * @brief Blackens gray objects until the worklist is empty.
  *
- * Currently performs only the root-marking phase (see the @note in the file
- * header). Remaining phases to add: trace references until the gray stack
- * is empty, tableRemoveWhite(&vm.strings), then sweep unmarked objects.
+ * @note Needs markObject() to skip already-marked objects, or cycles never
+ *       terminate.
+ */
+static void traceReferences() {
+  while (vm.grayCount > 0) {
+    Obj* object = vm.grayStack[--vm.grayCount];
+    blackenObject(object);
+  }
+}
+
+/**
+ * @brief Unlinks and frees unmarked objects; clears marks on survivors.
+ */
+static void sweep() {
+  Obj* previous = NULL;
+  Obj* object = vm.objects;
+  while (object != NULL) {
+    if (object->isMarked) {
+      object->isMarked = false;
+      previous = object;
+      object = object->next;
+    } else {
+      Obj* unreached = object;
+      object = object->next;
+      if (previous != NULL) {
+        previous->next = object;
+      } else {
+        vm.objects = object;
+      }
+
+      freeObject(unreached);
+    }
+  }
+}
+
+/**
+ * @brief Runs a mark-sweep collection and sets the next GC threshold to
+ *        live size * GC_HEAP_GROW_FACTOR.
  */
 void collectGarbage() {
 #ifdef DEBUG_LOG_GC
-  printf("-- GC BEGIN\n");
+  printf(" --- GC BEGIN\n");
+  size_t before = vm.bytesAllocated;
 #endif /* ifdef DEBUG_LOG_GC */
 
   markRoots();
+  traceReferences();
+  tableRemoveWhite(&vm.strings);
+  sweep();
 
+  vm.nextGC = vm.bytesAllocated * GC_HEAP_GROW_FACTOR;
 #ifdef DEBUG_LOG_GC
-  printf("-- GC END\n");
+  printf(" --- GC END\n");
+  printf("     collected %zu bytes (from %zu to %zu) next at %zu\n",
+         before - vm.bytesAllocated, before, vm.bytesAllocated, vm.nextGC);
 #endif /* ifdef DEBUG_LOG_GC */
 }
 
 /**
  * @brief Frees every object in the VM's all-objects list, plus the gray
  *        worklist. Called once at shutdown.
- *
- * Saves each `next` pointer before freeing the node that holds it.
  */
 void freeObjects() {
   Obj* object = vm.objects;
